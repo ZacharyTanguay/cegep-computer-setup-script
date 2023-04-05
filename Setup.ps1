@@ -21,12 +21,26 @@ Set-Mouse -Speed $MouseSpeed;
 Write-Host '[Done] Set mouse speed to '  -NoNewline
 Write-Host $MouseSpeed
 
-Set-ItemProperty -Path $TaskbarSmallIconsKey -Name TaskbarSmallIcons -Value $TaskbarSmallIcons
-Write-Host '[Done] Set TaskbarSmallIcons to ' -NoNewline
-Write-Host $TaskbarSmallIcons
+$Screen = "0"
+$Screen = Read-Host -Prompt 'Set Taskbar to small icons ? (1/0)'
 
-Set-ItemProperty -Path $MMTaskbarEnabledKey -Name MMTaskbarEnabled -Value $MMTaskbarEnabled
-Write-Host '[Done] Make taskbar appear only on one monitor'
+if ($Screen -eq "1") {
+	Set-ItemProperty -Path $TaskbarSmallIconsKey -Name TaskbarSmallIcons -Value $TaskbarSmallIcons
+	Write-Host '[Done] Set TaskbarSmallIcons to ' -NoNewline
+	Write-Host $TaskbarSmallIcons
+} else {
+	write-host '[Skipped] Set TaskbarSmallIcons'
+}
+
+$Screen = "0"
+$Screen = Read-Host -Prompt 'Make taskbar appear only on one monitor ? (1/0)'
+
+if ($Screen -eq "1") {
+	Set-ItemProperty -Path $MMTaskbarEnabledKey -Name MMTaskbarEnabled -Value $MMTaskbarEnabled
+	Write-Host '[Done] Make taskbar appear only on one monitor'
+} else {
+	write-host '[Skipped] Make taskbar appear only on one monitor'
+}
 
 Set-ItemProperty -Path $SystemUsesLightThemeKey -Name SystemUsesLightTheme -Value $SystemUsesLightTheme
 Write-Host '[Done] Set SystemUsesLightTheme to ' -NoNewline
@@ -48,36 +62,66 @@ if ($Screen -eq "0") {
 }
 #endregion
 
+
+#region Change wallpaper
+if ($AlwaysSkipWallpaperChange -eq "0") {
+
+	$Screen = "0"
+
+	if ($AlwaysChangeWallpaper -eq "1") {
+		$Screen = "1"
+	}
+	else {
+		$Screen = Read-Host -Prompt 'Change your wallpaper ? (1/0)'
+	}
+
+	if ($Screen -eq "1") {
+		$wallpaperPath = "$PSScriptRoot\Wallpaper\wallpaper.bmp"
+		Set-ItemProperty -Path 'HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\' -Name "Wallpaper" -Value $wallpaperPath
+		# rundll32.exe user32.dll, UpdatePerUserSystemParameters
+
+		Get-Process "explorer" | Stop-Process
+		Write-Host '[Done] Restart windows explorer'
+	}
+	else {
+		Write-Host '[Skipped] Change your wallpaper'
+	}
+}
+else {
+	Write-Host '[Skipped] Change your wallpaper'
+}
+#endregion
+
 #region Start Rust Job
-# if ($AlwaysSkipRustInstall -eq "0") {
+if ($AlwaysSkipRustInstall -eq "0") {
 
-# 	$Screen = "0"
+	$Screen = "0"
 
-# 	if ($AlwaysInstallRust -eq "1") {
-# 		$Screen = "1"
-# 	}
-# 	else {
-# 		$Screen = Read-Host -Prompt 'Install Rust ? (1/0)'
-# 	}
+	if ($AlwaysInstallRust -eq "1") {
+		$Screen = "1"
+	}
+	else {
+		$Screen = Read-Host -Prompt 'Install Rust ? (1/0)'
+	}
 
-# 	if ($Screen -eq "1") {
-# 		$rustInstallScript = {
-# 				.$PSScriptRoot\ExtraSoftware\vs_Enterprise.exe modify --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise" --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --quiet --norestart
-# 				.$PSScriptRoot\ExtraSoftware\rustup-init.exe -y -q
-# 		}
-# 		$rustInstallEndScript = {
-# 			Write-Host '[Done] Rust Install'
-# 		}
+	if ($Screen -eq "1") {
+		$rustInstallScript = {
+				.$PSScriptRoot\ExtraSoftware\vs_Enterprise.exe modify --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise" --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --quiet --norestart
+				.$PSScriptRoot\ExtraSoftware\rustup-init.exe -y -q
+		}
+		$rustInstallEndScript = {
+			Write-Host '[Done] Rust Install'
+		}
 
-# 		Start-Task -Name "rustinstall" -Script $rustInstallScript -EndScript $rustInstallEndScript -ComplexName "Install Rust"
-# 	}
-# 	else {
-# 		Write-Host '[Skipped] Install Rust'
-# 	}
-# }
-# else {
-# 	Write-Host '[Skipped] Install Rust'
-# }
+		Start-Task -Name "rustinstall" -Script $rustInstallScript -EndScript $rustInstallEndScript -ComplexName "Install Rust"
+	}
+	else {
+		Write-Host '[Skipped] Install Rust'
+	}
+}
+else {
+	Write-Host '[Skipped] Install Rust'
+}
 #endregion
 
 #region VS Code remove extension
@@ -130,8 +174,8 @@ if ($AlwaysSkipCmderInstall -eq "0") {
 			Start-Process "C:\Program Files\7-Zip\7z.exe" -ArgumentList "x C:\Users\2176651\Documents\cmder.zip -oC:\" -Wait
 		}
 		$cmderInstallEndScript = {
-			md 'C:\Users\2176651\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe' > $null
-			md 'C:\Users\2176651\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState' > $null
+			mkdir 'C:\Users\2176651\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe' > $null
+			mkdir 'C:\Users\2176651\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState' > $null
 			Copy-Item -Path "$PSScriptRoot\ExtraSoftware\settings.json" -Destination "C:\Users\2176651\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\"
 			Write-Host '[Done] Cmder Install'
 		}
@@ -144,6 +188,24 @@ if ($AlwaysSkipCmderInstall -eq "0") {
 }
 else {
 	Write-Host '[Skipped] Install Cmder'
+}
+#endregion
+
+#region PowerToys
+$Screen = "0"
+$Screen = Read-Host -Prompt 'Install PowerToys ? (1/0)'
+
+if ($Screen -eq "1") {
+	$powertoysInstallScript = {
+		winget install Microsoft.PowerToys -s winget
+	}
+	$powertoysEndScript = {
+		Write-Host '[Done] Powertoys Install'
+	}
+
+	Start-Task -Name "powertoys" -Script $powertoysInstallScript -EndScript $powertoysEndScript -ComplexName "Install Powertoys"
+} else {
+	Write-Host '[Skipped] Install PowerToys'
 }
 #endregion
 
@@ -160,42 +222,44 @@ Write-Host '"'
 corepack enable
 corepack prepare yarn@1.22.19 --activate
 
-$powertoysInstallScript = {
-	winget install Microsoft.PowerToys -s winget
-}
-$powertoysEndScript = {
-	Write-Host '[Done] Powertoys Install'
-}
+$Screen = "0"
+$Screen = Read-Host -Prompt 'Set Github GPG Key ? (1/0)'
 
-Start-Task -Name "powertoys" -Script $powertoysInstallScript -EndScript $powertoysEndScript -ComplexName "Install Powertoys"
-
-
-$gitsetupScript = {
-	Start-Process msiexec.exe -Wait -ArgumentList '/i "\\laboratoire.collegeem.qc.ca\Stockage\usagers\Etudiants\2176651\ExtraSoftware\GnuPG.msi" /q'
+if ($Screen -eq "1") {
+	$gitsetupScript = {
+		Start-Process msiexec.exe -Wait -ArgumentList '/i "\\laboratoire.collegeem.qc.ca\Stockage\usagers\Etudiants\2176651\ExtraSoftware\GnuPG.msi" /q'
+		
+		$oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path
+		$oldpath += ";C:\Program Files (x86)\gnupg\bin"
+		Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $oldpath
+	}
 	
-	$oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path
-	$oldpath += ";C:\Program Files (x86)\gnupg\bin"
-	Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $oldpath
+	$gitsetupEndScript = {
+		."C:\Program Files (x86)\gnupg\bin\gpg.exe" --import $PSScriptRoot\ExtraSoftware\keypublic.txt
+		Write-Host "[Done] Imported Git public key into gpg"
+		."C:\Program Files (x86)\gnupg\bin\gpg.exe" --import $PSScriptRoot\ExtraSoftware\key.txt
+		Write-Host "[Done] Imported Git private key into gpg"
+	
+		git config --global user.signingkey $GitSignKeyId
+		git config --global commit.gpgsign true
+		git config --global gpg.program "c:/Program Files (x86)/GnuPG/bin/gpg.exe"
+		Write-Host '[Done] Setup git private key'
+	}
+
+	Start-Task -Name "gitInstall" -Script $gitsetupScript -EndScript $gitsetupEndScript -ComplexName "Git Setup"
 }
-
-$gitsetupEndScript = {
-	."C:\Program Files (x86)\gnupg\bin\gpg.exe" --import $PSScriptRoot\ExtraSoftware\keypublic.txt
-	Write-Host "[Done] Imported Git public key into gpg"
-	."C:\Program Files (x86)\gnupg\bin\gpg.exe" --import $PSScriptRoot\ExtraSoftware\key.txt
-	Write-Host "[Done] Imported Git private key into gpg"
-
-	git config --global user.signingkey $GitSignKeyId
-	git config --global commit.gpgsign true
-	git config --global gpg.program "c:/Program Files (x86)/GnuPG/bin/gpg.exe"
-	Write-Host '[Done] Setup git private key'
-}
-
-Start-Task -Name "gitInstall" -Script $gitsetupScript -EndScript $gitsetupEndScript -ComplexName "Git Setup"
 #endregion
 
 #region Change default browser
-.$PSScriptRoot\ExtraSoftware\SetDefaultBrowser\SetDefaultBrowser.exe Edge delay=1000
-Write-Host '[Done] Change default browser to Edge'
+$Screen = "0"
+$Screen = Read-Host -Prompt 'Change default browser to Edge ? (1/0)'
+
+if ($Screen -eq "1") {
+	.$PSScriptRoot\ExtraSoftware\SetDefaultBrowser\SetDefaultBrowser.exe Edge delay=1000
+	Write-Host '[Done] Change default browser to Edge'
+} else {
+	Write-Host '[Skipped] Change default browser to Edge'
+}
 #endregion
 
 #region Uninstall NetSupport School
@@ -221,31 +285,6 @@ if ($AlwaysSkipNetSupportUninstall -eq "0") {
 else {
 	Write-Host '[Skipped] Uninstall NetSupport School'
 }
-#endregion
-
-#region Install VNCViewer
-# if ($AlwaysSkipVNCViewerInstall -eq "0") {
-
-# 	$Screen = "0"
-
-# 	if ($AlwaysInstallVNCViewer -eq "1") {
-# 		$Screen = "1"
-# 	}
-# 	else {
-# 		$Screen = Read-Host -Prompt 'Install VNC-Viewer ? (1/0)'
-# 	}
-
-# 	if ($Screen -eq "1") {
-# 		msiexec /i "$PSScriptRoot\ExtraSoftware\VNC-Viewer\VNC-Viewer-6.21.1109-Windows-en-64bit.msi"
-# 		Write-Host '[Done] Install VNC-Viewer'
-# 	}	
-# 	else {
-# 		Write-Host '[Skipped] Install VNC-Viewer'
-# 	}
-# }
-# else {
-# 	Write-Host '[Skipped] Install VNC-Viewer'
-# }
 #endregion
 
 #region Wait for jobs to finish

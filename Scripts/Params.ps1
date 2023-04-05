@@ -28,16 +28,16 @@ $GitSignKeyId = "02F1F29D065F645B"
 
 #Skip some questions when executing script ? 0 if false, 1 if true.
 $AlwaysSkipNetSupportUninstall = "1"
-# $AlwaysSkipVNCViewerInstall = "1"
 $AlwaysSkipCmderInstall = "0"
 $AlwaysSkipRustInstall = "0"
 $AlwaysSkipVSCodeExtensionUninstall = "0"
+$AlwaysSkipWallpaperChange = "0"
 
-$AlwaysUninstallNetSupport = "1"
-# $AlwaysInstallVNCViewer = "1"
-$AlwaysInstallCmder = "1"
-# $AlwaysInstallRust = "0"
+$AlwaysUninstallNetSupport = "0"
+$AlwaysInstallCmder = "0"
+$AlwaysInstallRust = "0"
 $AlwaysUninstallVSCodeExtension = "0"
+$AlwaysChangeWallpaper = "0"
 
 $AskForMouseSpeed = "0"
 $ChangeKeyboardLayoutToUs = "0"
